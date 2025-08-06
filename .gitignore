@@ -45,6 +45,10 @@ dmypy.json
 .env.*.local
 *.env
 
+# mise local configuration
+.mise.local.toml
+.mise.*.local.toml
+
 # IDE
 .vscode/
 .idea/

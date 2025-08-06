@@ -2,9 +2,13 @@
 # https://mise.jdx.dev/
 
 [env]
+# Default test credentials - override in .mise.local.toml
 RACKSPACE_USERNAME = "test-user"
 RACKSPACE_API_KEY = "test-key"
 RACKSPACE_ACCOUNT = "123456"
+
+# Set these in .mise.local.toml for real usage
+# See .mise.local.toml.example for template
 
 [tools]
 python = "3.11"
