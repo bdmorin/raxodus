@@ -21,7 +21,8 @@ from .models import AuthToken, Ticket, TicketList
 class RackspaceClient:
     """Client for interacting with Rackspace API."""
     
-    BASE_URL = "https://api.rackspace.com"
+    AUTH_URL = "https://identity.api.rackspacecloud.com"
+    TICKET_API_URL = "https://demo.ticketing.api.rackspace.com"
     
     def __init__(
         self,
@@ -148,7 +149,7 @@ class RackspaceClient:
         
         response = self._request(
             "POST",
-            f"{self.BASE_URL}/v2.0/tokens",
+            f"{self.AUTH_URL}/v2.0/tokens",
             json=auth_data,
         )
         
@@ -230,7 +231,7 @@ class RackspaceClient:
         # Make request
         response = self._request(
             "GET",
-            f"{self.BASE_URL}/v2/{account}/tickets",
+            f"{self.TICKET_API_URL}/tickets",
             headers=self._get_headers(),
             params=params,
         )
@@ -278,7 +279,7 @@ class RackspaceClient:
         # Make request
         response = self._request(
             "GET",
-            f"{self.BASE_URL}/v2/{account}/tickets/{ticket_id}",
+            f"{self.TICKET_API_URL}/tickets/{ticket_id}",
             headers=self._get_headers(),
         )
         
@@ -311,7 +312,7 @@ class RackspaceClient:
         # Make request
         response = self._request(
             "GET",
-            f"{self.BASE_URL}/v2/{account}/tickets/search",
+            f"{self.TICKET_API_URL}/tickets/search",
             headers=self._get_headers(),
             params={"q": query},
         )
