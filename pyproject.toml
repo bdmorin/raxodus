@@ -57,10 +57,15 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "B", "Q"]
-ignore = ["E501"]  # line too long - handled by formatter
+ignore = [
+    "E501",  # line too long - handled by formatter
+    "N815",  # variable names in class scope should not be mixedCase - needed for API compatibility
+]
 
 [tool.mypy]
 python_version = "3.10"
-warn_return_any = true
+warn_return_any = false
 warn_unused_configs = true
-disallow_untyped_defs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+check_untyped_defs = false

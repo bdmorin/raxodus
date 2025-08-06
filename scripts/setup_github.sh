@@ -25,7 +25,6 @@ gh repo create bdmorin/raxodus \
     --public \
     --description "Escape from Rackspace ticket hell - A minimal CLI for Rackspace tickets" \
     --homepage "https://pypi.org/project/raxodus/" \
-    --license MIT \
     --push \
     --source . \
     --remote origin

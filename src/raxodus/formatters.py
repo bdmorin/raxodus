@@ -8,15 +8,15 @@ from typing import Any, Dict
 from rich.console import Console
 from rich.table import Table
 
-from .models import Ticket, TicketList
+from .models import TicketList
 
 
 def format_json(data: Dict[str, Any]) -> str:
     """Format data as JSON.
-    
+
     Args:
         data: Data to format
-        
+
     Returns:
         JSON string
     """
@@ -25,22 +25,22 @@ def format_json(data: Dict[str, Any]) -> str:
 
 def format_table(ticket_list: TicketList) -> str:
     """Format tickets as a rich table.
-    
+
     Args:
         ticket_list: List of tickets
-        
+
     Returns:
         Formatted table string
     """
     console = Console()
-    
+
     table = Table(title=f"Tickets ({ticket_list.total} total)")
     table.add_column("ID", style="cyan", no_wrap=True)
     table.add_column("Subject", style="white")
     table.add_column("Status", style="yellow")
     table.add_column("Severity", style="red")
     table.add_column("Created", style="green")
-    
+
     for ticket in ticket_list.tickets:
         table.add_row(
             ticket.id,
@@ -49,20 +49,20 @@ def format_table(ticket_list: TicketList) -> str:
             ticket.severity or "N/A",
             ticket.created_at.strftime("%Y-%m-%d %H:%M"),
         )
-    
+
     # Capture table output
     with console.capture() as capture:
         console.print(table)
-    
+
     return capture.get()
 
 
 def format_csv(ticket_list: TicketList) -> str:
     """Format tickets as CSV.
-    
+
     Args:
         ticket_list: List of tickets
-        
+
     Returns:
         CSV string
     """
@@ -81,9 +81,9 @@ def format_csv(ticket_list: TicketList) -> str:
             "assigned_to",
         ],
     )
-    
+
     writer.writeheader()
-    
+
     for ticket in ticket_list.tickets:
         writer.writerow({
             "id": ticket.id,
@@ -96,5 +96,5 @@ def format_csv(ticket_list: TicketList) -> str:
             "requester": ticket.requester or "",
             "assigned_to": ticket.assigned_to or "",
         })
-    
+
     return output.getvalue()

@@ -4,7 +4,7 @@ import json
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 from tenacity import (
@@ -20,11 +20,11 @@ from .models import AuthToken, Ticket, TicketList
 
 class RackspaceClient:
     """Client for interacting with Rackspace API."""
-    
+
     # Default URLs - can be overridden via environment or init
     DEFAULT_AUTH_URL = "https://identity.api.rackspacecloud.com"
     DEFAULT_TICKET_API_URL = "https://demo.ticketing.api.rackspace.com"
-    
+
     def __init__(
         self,
         username: Optional[str] = None,
@@ -38,7 +38,7 @@ class RackspaceClient:
         timeout: float = 30.0,
     ):
         """Initialize Rackspace client.
-        
+
         Args:
             username: Rackspace username (or from RACKSPACE_USERNAME env)
             api_key: API key (or from RACKSPACE_API_KEY env)
@@ -57,39 +57,39 @@ class RackspaceClient:
         self.ticket_api_url = ticket_api_url or os.getenv("RACKSPACE_TICKET_API_URL", self.DEFAULT_TICKET_API_URL)
         self.region = region
         self.timeout = timeout
-        
+
         if not self.username or not self.api_key:
             raise RaxodusError(
                 "Missing credentials. Set RACKSPACE_USERNAME and RACKSPACE_API_KEY"
             )
-        
+
         # Setup caching
         self.cache_dir = cache_dir or Path.home() / ".cache" / "raxodus"
         self.cache_ttl = cache_ttl
         if self.cache_dir:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # HTTP client
         self.client = httpx.Client(
             timeout=self.timeout,
             headers={"User-Agent": "raxodus/0.1.0"},
         )
-        
+
         # Auth state
         self._token: Optional[AuthToken] = None
-    
+
     def __enter__(self):
         """Context manager entry."""
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.close()
-    
+
     def close(self):
         """Close HTTP client."""
         self.client.close()
-    
+
     @retry(
         retry=retry_if_exception_type(RateLimitError),
         stop=stop_after_attempt(3),
@@ -102,51 +102,51 @@ class RackspaceClient:
         **kwargs
     ) -> httpx.Response:
         """Make HTTP request with retry logic.
-        
+
         Args:
             method: HTTP method
             url: URL to request
             **kwargs: Additional arguments for httpx
-            
+
         Returns:
             HTTP response
-            
+
         Raises:
             RateLimitError: If rate limited
             RaxodusError: For other errors
         """
         try:
             response = self.client.request(method, url, **kwargs)
-            
+
             if response.status_code == 429:
                 raise RateLimitError("Rate limited by Rackspace API")
-            
+
             response.raise_for_status()
             return response
-            
+
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 401:
-                raise AuthenticationError("Invalid credentials or expired token")
+                raise AuthenticationError("Invalid credentials or expired token") from e
             elif e.response.status_code == 403:
-                raise AuthenticationError("Access denied")
+                raise AuthenticationError("Access denied") from e
             else:
-                raise RaxodusError(f"API error: {e}")
+                raise RaxodusError(f"API error: {e}") from e
         except httpx.RequestError as e:
-            raise RaxodusError(f"Request failed: {e}")
-    
+            raise RaxodusError(f"Request failed: {e}") from e
+
     def authenticate(self) -> AuthToken:
         """Authenticate with Rackspace API.
-        
+
         Returns:
             Authentication token
-            
+
         Raises:
             AuthenticationError: If authentication fails
         """
         # Check cached token
         if self._token and not self._token.is_expired:
             return self._token
-        
+
         # Request new token
         auth_data = {
             "auth": {
@@ -156,15 +156,15 @@ class RackspaceClient:
                 }
             }
         }
-        
+
         response = self._request(
             "POST",
             f"{self.auth_url}/v2.0/tokens",
             json=auth_data,
         )
-        
+
         data = response.json()
-        
+
         # Parse token
         token_data = data["access"]["token"]
         self._token = AuthToken(
@@ -174,17 +174,17 @@ class RackspaceClient:
             ),
             user_id=data["access"]["user"]["id"],
             accounts=[
-                svc["name"] 
+                svc["name"]
                 for svc in data["access"].get("serviceCatalog", [])
                 if svc["type"] == "account"
             ],
         )
-        
+
         return self._token
-    
+
     def _get_headers(self) -> Dict[str, str]:
         """Get headers with authentication token.
-        
+
         Returns:
             Headers dict
         """
@@ -194,7 +194,7 @@ class RackspaceClient:
             "Accept": "application/json",
             "Content-Type": "application/json",
         }
-    
+
     def list_tickets(
         self,
         account: Optional[str] = None,
@@ -204,36 +204,36 @@ class RackspaceClient:
         per_page: int = 100,
     ) -> TicketList:
         """List support tickets.
-        
+
         Args:
             account: Account number (uses default if not provided)
             status: Filter by status
             days: Show tickets from last N days
             page: Page number
             per_page: Results per page
-            
+
         Returns:
             List of tickets
         """
         import time
-        
+
         account = account or self.account
         if not account:
             raise RaxodusError("Account number required")
-        
+
         # Build query parameters
         params = {
             "page": page,
             "per_page": per_page,
         }
-        
+
         if status:
             params["status"] = status
-        
+
         if days:
             since = datetime.utcnow() - timedelta(days=days)
             params["since"] = since.isoformat()
-        
+
         # Check cache
         cache_key = f"tickets_{account}_{status}_{days}_{page}_{per_page}"
         cached = self._get_cached(cache_key)
@@ -242,7 +242,7 @@ class RackspaceClient:
             result.from_cache = True
             result.elapsed_seconds = 0.0
             return result
-        
+
         # Make request with timing
         start_time = time.time()
         response = self._request(
@@ -252,9 +252,9 @@ class RackspaceClient:
             params=params,
         )
         elapsed = time.time() - start_time
-        
+
         data = response.json()
-        
+
         # Parse tickets
         tickets = [Ticket(**t) for t in data.get("tickets", [])]
         result = TicketList(
@@ -265,32 +265,32 @@ class RackspaceClient:
             elapsed_seconds=round(elapsed, 3),
             from_cache=False,
         )
-        
+
         # Cache result
         self._set_cached(cache_key, result.model_dump(mode="json"))
-        
+
         return result
-    
+
     def get_ticket(
         self,
         ticket_id: str,
         account: Optional[str] = None,
     ) -> Ticket:
         """Get a specific ticket.
-        
+
         Args:
             ticket_id: Ticket ID
             account: Account number (uses default if not provided)
-            
+
         Returns:
             Ticket details
         """
         import time
-        
+
         account = account or self.account
         if not account:
             raise RaxodusError("Account number required")
-        
+
         # Check cache
         cache_key = f"ticket_{account}_{ticket_id}"
         cached = self._get_cached(cache_key)
@@ -300,7 +300,7 @@ class RackspaceClient:
             ticket._elapsed_seconds = 0.0
             ticket._from_cache = True
             return ticket
-        
+
         # Make request with timing
         start_time = time.time()
         response = self._request(
@@ -309,56 +309,56 @@ class RackspaceClient:
             headers=self._get_headers(),
         )
         elapsed = time.time() - start_time
-        
+
         data = response.json()
         ticket = Ticket(**data)
-        
+
         # Add timing metadata (using private attrs)
         ticket._elapsed_seconds = round(elapsed, 3)
         ticket._from_cache = False
-        
+
         # Cache result
         self._set_cached(cache_key, ticket.model_dump(mode="json"))
-        
+
         return ticket
-    
-    
+
+
     def _get_cached(self, key: str) -> Optional[Dict[str, Any]]:
         """Get cached data if available and not expired.
-        
+
         Args:
             key: Cache key
-            
+
         Returns:
             Cached data or None
         """
         if not self.cache_dir:
             return None
-        
+
         cache_file = self.cache_dir / f"{key}.json"
         if not cache_file.exists():
             return None
-        
+
         # Check age
         age = datetime.now().timestamp() - cache_file.stat().st_mtime
         if age > self.cache_ttl:
             return None
-        
+
         try:
             return json.loads(cache_file.read_text())
         except (json.JSONDecodeError, IOError):
             return None
-    
+
     def _set_cached(self, key: str, data: Dict[str, Any]) -> None:
         """Cache data.
-        
+
         Args:
             key: Cache key
             data: Data to cache
         """
         if not self.cache_dir:
             return
-        
+
         cache_file = self.cache_dir / f"{key}.json"
         try:
             cache_file.write_text(json.dumps(data, default=str))

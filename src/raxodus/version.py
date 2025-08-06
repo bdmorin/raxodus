@@ -6,10 +6,10 @@ __tagline__ = "The dark wizard whose defeat marked the beginning of the Age of D
 
 def get_avatar_url(style: str = "bottts") -> str:
     """Get the DiceBear avatar URL for the current release.
-    
+
     Args:
         style: Avatar style (pixel-art, adventurer, bottts, etc.)
-        
+
     Returns:
         URL to the avatar image
     """
@@ -17,7 +17,7 @@ def get_avatar_url(style: str = "bottts") -> str:
 
 def get_version_info() -> str:
     """Get full version information.
-    
+
     Returns:
         Formatted version string with codename
     """

@@ -1,21 +1,17 @@
 """Command-line interface for raxodus."""
 
-import json
 import sys
-from datetime import datetime
-from pathlib import Path
-from typing import Optional
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
-from . import __version__, __codename__, __tagline__, get_avatar_url, get_version_info
+from . import __codename__, __tagline__, __version__, get_avatar_url
 from .client import RackspaceClient
 from .exceptions import AuthenticationError, RaxodusError
 from .formatters import format_csv, format_json, format_table
-from .shell_completions import detect_shell, install_completion, COMPLETION_SCRIPTS
+from .shell_completions import COMPLETION_SCRIPTS, detect_shell, install_completion
 
 console = Console()
 
@@ -24,7 +20,7 @@ def version_callback(ctx, param, value):
     """Show detailed version information."""
     if not value or ctx.resilient_parsing:
         return
-    
+
     console.print(Panel.fit(
         f"[bold cyan]raxodus[/bold cyan] v{__version__}\n"
         f"[yellow]Codename:[/yellow] {__codename__}\n"
@@ -48,9 +44,9 @@ def version_callback(ctx, param, value):
 @click.pass_context
 def cli(ctx):
     """raxodus - Escape from Rackspace ticket hell.
-    
+
     Set credentials via environment variables:
-    
+
         export RACKSPACE_USERNAME="your-username"
         export RACKSPACE_API_KEY="your-api-key"
         export RACKSPACE_ACCOUNT="123456"
@@ -118,7 +114,7 @@ def list_tickets(account, status, days, page, per_page, output_format, debug):
                 page=page,
                 per_page=per_page,
             )
-            
+
             if output_format == "json":
                 click.echo(format_json(result.to_summary(include_metadata=debug)))
             elif output_format == "table":
@@ -130,7 +126,7 @@ def list_tickets(account, status, days, page, per_page, output_format, debug):
                 click.echo(format_table(result))
             elif output_format == "csv":
                 click.echo(format_csv(result))
-                
+
     except RaxodusError as e:
         console.print(f"[red]Error:[/red] {e}", file=sys.stderr)
         sys.exit(1)
@@ -156,7 +152,7 @@ def get_ticket(ticket_id, account, output_format, debug):
     try:
         with RackspaceClient() as client:
             ticket = client.get_ticket(ticket_id, account=account)
-            
+
             if output_format == "json":
                 click.echo(format_json(ticket.to_dict_with_metadata(include_metadata=debug)))
             elif output_format == "table":
@@ -164,7 +160,7 @@ def get_ticket(ticket_id, account, output_format, debug):
                 table = Table(title=f"Ticket {ticket.id}")
                 table.add_column("Field", style="cyan")
                 table.add_column("Value")
-                
+
                 table.add_row("ID", ticket.id)
                 table.add_row("Subject", ticket.subject)
                 table.add_row("Status", ticket.status)
@@ -173,9 +169,9 @@ def get_ticket(ticket_id, account, output_format, debug):
                 table.add_row("Updated", ticket.updated_at.isoformat())
                 table.add_row("Requester", ticket.requester or "N/A")
                 table.add_row("Assigned To", ticket.assigned_to or "N/A")
-                
+
                 console.print(table)
-                
+
     except RaxodusError as e:
         console.print(f"[red]Error:[/red] {e}", file=sys.stderr)
         sys.exit(1)
@@ -196,18 +192,18 @@ def completion():
 )
 def install(shell):
     """Install shell completion for raxodus."""
-    
+
     if shell == "auto":
         shell = detect_shell()
         console.print(f"Detected shell: [cyan]{shell}[/cyan]")
-    
+
     try:
         success, message = install_completion(shell)
-        
+
         if success:
             console.print(f"[green]✅ {message}[/green]")
-            console.print(f"[yellow]Please restart your shell or run:[/yellow]")
-            
+            console.print("[yellow]Please restart your shell or run:[/yellow]")
+
             if shell == "bash":
                 console.print("  source ~/.bashrc")
             elif shell == "zsh":
@@ -216,7 +212,7 @@ def install(shell):
                 console.print("  source ~/.config/fish/config.fish")
         else:
             console.print(f"[yellow]{message}[/yellow]")
-    
+
     except Exception as e:
         console.print(f"[red]Error installing completion:[/red] {e}", file=sys.stderr)
         sys.exit(1)
@@ -231,7 +227,7 @@ def install(shell):
 )
 def show(shell):
     """Show shell completion script for raxodus."""
-    
+
     try:
         if shell in COMPLETION_SCRIPTS:
             console.print(COMPLETION_SCRIPTS[shell])
