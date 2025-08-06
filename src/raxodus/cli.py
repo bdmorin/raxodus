@@ -9,8 +9,9 @@ from typing import Optional
 import click
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
 
-from . import __version__
+from . import __version__, __codename__, __tagline__, get_avatar_url, get_version_info
 from .client import RackspaceClient
 from .exceptions import AuthenticationError, RaxodusError
 from .formatters import format_csv, format_json, format_table
@@ -18,8 +19,31 @@ from .formatters import format_csv, format_json, format_table
 console = Console()
 
 
+def version_callback(ctx, param, value):
+    """Show detailed version information."""
+    if not value or ctx.resilient_parsing:
+        return
+    
+    console.print(Panel.fit(
+        f"[bold cyan]raxodus[/bold cyan] v{__version__}\n"
+        f"[yellow]Codename:[/yellow] {__codename__}\n"
+        f"[dim]{__tagline__}[/dim]\n\n"
+        f"[link={get_avatar_url()}]View Avatar[/link]",
+        title="🗡️ Raxodus Release Info 🗡️",
+        border_style="blue"
+    ))
+    ctx.exit()
+
+
 @click.group()
-@click.version_option(version=__version__, prog_name="raxodus")
+@click.option(
+    "--version",
+    is_flag=True,
+    callback=version_callback,
+    expose_value=False,
+    is_eager=True,
+    help="Show version and release information"
+)
 @click.pass_context
 def cli(ctx):
     """raxodus - Escape from Rackspace ticket hell.

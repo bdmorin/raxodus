@@ -1,9 +1,18 @@
 """raxodus - Escape from Rackspace ticket hell."""
 
-__version__ = "0.1.0"
-__author__ = "Brian Morin"
-
+from .version import __version__, __codename__, __tagline__, get_avatar_url, get_version_info
 from .client import RackspaceClient
 from .models import Ticket, TicketList
 
-__all__ = ["RackspaceClient", "Ticket", "TicketList"]
+__author__ = "Brian Morin"
+
+__all__ = [
+    "RackspaceClient", 
+    "Ticket", 
+    "TicketList",
+    "__version__",
+    "__codename__",
+    "__tagline__",
+    "get_avatar_url",
+    "get_version_info",
+]
