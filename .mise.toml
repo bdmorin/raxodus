@@ -14,6 +14,7 @@ RACKSPACE_ACCOUNT = "123456"
 python = "3.11"
 uv = "latest"
 
+
 [tasks.clean]
 description = "Clean all build artifacts and caches"
 run = """
@@ -32,11 +33,15 @@ uv build .
 echo "✅ Built package version $(grep __version__ src/raxodus/version.py | cut -d'"' -f2)"
 """
 
-[tasks.install]
-description = "Install package locally (editable)"
+[tasks.install-local]
+description = "Install package locally for development"
+depends = ["build"]
 run = """
-uv pip install -e .
-echo "✅ Installed raxodus in editable mode"
+echo "📦 Installing local wheel with uvx..."
+# Force reinstall from local wheel
+uvx uninstall raxodus 2>/dev/null || true
+uvx install ./dist/raxodus-*.whl
+echo "✅ Installed raxodus locally via uvx"
 """
 
 [tasks.install-wheel]
@@ -49,23 +54,26 @@ echo "✅ Installed from wheel"
 
 [tasks.test-cli]
 description = "Test CLI commands"
+depends = ["build"]
 run = """
 echo "🧪 Testing CLI..."
-raxodus --version
-raxodus --help
-raxodus tickets list --help | grep -q debug && echo "✅ Debug flag found" || echo "❌ Debug flag missing"
+uvx --from ./dist/raxodus-*.whl raxodus --version
+uvx --from ./dist/raxodus-*.whl raxodus --help | head -20
+uvx --from ./dist/raxodus-*.whl raxodus tickets list --help | grep -q debug && echo "✅ Debug flag found" || echo "❌ Debug flag missing"
 """
 
 [tasks.test-debug]
 description = "Test debug output (will fail auth with test creds)"
+depends = ["build"]
 run = """
 echo "🧪 Testing debug output..."
-raxodus tickets list --debug --format json 2>&1 | head -20
+uvx --from ./dist/raxodus-*.whl raxodus tickets list --debug --format json 2>&1 | head -20
 """
 
 [tasks.dev]
 description = "Setup development environment"
 run = """
+uv venv
 uv pip install -e ".[dev]"
 echo "✅ Development environment ready"
 """
@@ -139,11 +147,18 @@ watchexec -e py -w src -- mise run build
 # Compound tasks
 [tasks.up]
 description = "Full development setup"
-depends = ["clean", "install", "dev", "test-cli"]
+depends = ["clean", "build", "test-cli"]
 
 [tasks.test]
 description = "Run all tests"
 depends = ["test-cli", "test-debug"]
+
+[tasks.test-local]
+description = "Quick test with local wheel"
+depends = ["build"]
+run = """
+uvx --from ./dist/raxodus-*.whl raxodus --version
+"""
 
 [tasks.ship]
 description = "Ship a new release"
