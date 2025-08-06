@@ -70,14 +70,22 @@ echo "✅ Development environment ready"
 description = "Pre-release checks"
 run = """
 echo "📋 Release Checklist:"
-echo -n "  Version: "
-grep __version__ src/raxodus/version.py | cut -d'"' -f2
-echo -n "  Git status: "
-git status --porcelain | wc -l | xargs -I {} test {} -eq 0 && echo "✅ Clean" || echo "❌ Uncommitted changes"
-echo -n "  Tests: "
-mise run test-cli > /dev/null 2>&1 && echo "✅ Pass" || echo "❌ Fail"
-echo -n "  Build: "
-mise run build > /dev/null 2>&1 && echo "✅ Success" || echo "❌ Failed"
+echo "  Version: $(grep __version__ src/raxodus/version.py | cut -d'"' -f2)"
+if [ $(git status --porcelain | wc -l) -eq 0 ]; then
+    echo "  Git status: ✅ Clean"
+else
+    echo "  Git status: ❌ Uncommitted changes"
+fi
+if mise run test-cli > /dev/null 2>&1; then
+    echo "  Tests: ✅ Pass"
+else
+    echo "  Tests: ❌ Fail"
+fi
+if mise run build > /dev/null 2>&1; then
+    echo "  Build: ✅ Success"
+else
+    echo "  Build: ❌ Failed"
+fi
 """
 
 [tasks.publish-test]
@@ -105,11 +113,13 @@ if ! command -v act &> /dev/null; then
     exit 1
 fi
 echo "🎬 Testing GitHub Actions..."
+echo "Note: Using Python image for compatibility"
 DOCKER_HOST=unix:///$HOME/.colima/default/docker.sock act \
     -W .github/workflows \
     --container-architecture linux/amd64 \
-    -P ubuntu-latest=node:16-slim \
-    -j quick-test
+    -P ubuntu-latest=catthehacker/ubuntu:act-latest \
+    -j test \
+    --matrix python-version:3.11
 """
 
 [tasks.watch]
