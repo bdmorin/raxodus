@@ -1,6 +1,6 @@
 """Version and release information for raxodus."""
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __codename__ = "Mondain"
 __tagline__ = "The dark wizard whose defeat marked the beginning of the Age of Darkness"
 
