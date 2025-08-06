@@ -15,6 +15,7 @@ from . import __version__, __codename__, __tagline__, get_avatar_url, get_versio
 from .client import RackspaceClient
 from .exceptions import AuthenticationError, RaxodusError
 from .formatters import format_csv, format_json, format_table
+from .shell_completions import detect_shell, install_completion, COMPLETION_SCRIPTS
 
 console = Console()
 
@@ -180,6 +181,66 @@ def get_ticket(ticket_id, account, output_format, debug):
         sys.exit(1)
 
 
+@cli.group()
+def completion():
+    """Manage shell completions for raxodus."""
+    pass
+
+
+@completion.command()
+@click.option(
+    "--shell",
+    type=click.Choice(["bash", "zsh", "fish", "auto"]),
+    default="auto",
+    help="Shell to install completion for"
+)
+def install(shell):
+    """Install shell completion for raxodus."""
+    
+    if shell == "auto":
+        shell = detect_shell()
+        console.print(f"Detected shell: [cyan]{shell}[/cyan]")
+    
+    try:
+        success, message = install_completion(shell)
+        
+        if success:
+            console.print(f"[green]✅ {message}[/green]")
+            console.print(f"[yellow]Please restart your shell or run:[/yellow]")
+            
+            if shell == "bash":
+                console.print("  source ~/.bashrc")
+            elif shell == "zsh":
+                console.print("  source ~/.zshrc")
+            elif shell == "fish":
+                console.print("  source ~/.config/fish/config.fish")
+        else:
+            console.print(f"[yellow]{message}[/yellow]")
+    
+    except Exception as e:
+        console.print(f"[red]Error installing completion:[/red] {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+@completion.command()
+@click.option(
+    "--shell",
+    type=click.Choice(["bash", "zsh", "fish"]),
+    required=True,
+    help="Shell to generate completion for"
+)
+def show(shell):
+    """Show shell completion script for raxodus."""
+    
+    try:
+        if shell in COMPLETION_SCRIPTS:
+            console.print(COMPLETION_SCRIPTS[shell])
+        else:
+            console.print(f"[red]Error:[/red] Shell '{shell}' not supported", file=sys.stderr)
+            sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def main():
