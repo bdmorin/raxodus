@@ -1,0 +1,22 @@
+# Example configuration for raxodus
+# Copy to ~/.config/raxodus/config.toml and update with your values
+
+[auth]
+# Your Rackspace username
+username = "your-username"
+
+# Default account number (optional)
+account = "123456"
+
+# API region (us, uk, etc.)
+region = "us"
+
+[cache]
+# Enable response caching
+enabled = true
+
+# Cache time-to-live in seconds
+ttl = 300
+
+# Cache directory (defaults to ~/.cache/raxodus)
+# dir = "/custom/cache/path"
