@@ -4,7 +4,7 @@ __version__ = "0.1.0"
 __codename__ = "Mondain"
 __tagline__ = "The dark wizard whose defeat marked the beginning of the Age of Darkness"
 
-def get_avatar_url(style: str = "pixel-art") -> str:
+def get_avatar_url(style: str = "bottts") -> str:
     """Get the DiceBear avatar URL for the current release.
     
     Args:

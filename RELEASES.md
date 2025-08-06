@@ -34,24 +34,17 @@ Each release is named after a character, place, or concept from the Ultima serie
 
 ## Avatar Generation
 
-Each release automatically gets a unique avatar using the release name as seed:
+Each release automatically gets a unique avatar using the release name as seed.
 
-```
-https://api.dicebear.com/9.x/pixel-art/svg?seed={release_name}
-```
-
-### Alternative Styles:
-- `pixel-art` - Classic 8-bit style (default)
-- `adventurer` - Fantasy RPG characters
-- `avataaars` - Modern cartoon style
-- `bottts` - Robot avatars (for "Exodus" theme)
-- `identicon` - Geometric patterns
-- `shapes` - Abstract shapes
+### Avatar Styles by Major Version:
+- **0.x.x releases** - `bottts` (Robot style - "neither demon nor machine")
+- **1.x.x releases** - `pixel-art` (Classic 8-bit Ultima style)
+- **2.x.x releases** - `adventurer` (Fantasy RPG characters)
 
 ## Current Release
 
 ### v0.1.0 - "Mondain"
-![Mondain Avatar](https://api.dicebear.com/9.x/pixel-art/svg?seed=Mondain)
+![Mondain Avatar](https://api.dicebear.com/9.x/bottts/svg?seed=Mondain)
 
 *"The dark wizard whose defeat marked the beginning of the Age of Darkness"*
 
