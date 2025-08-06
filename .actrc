@@ -10,6 +10,10 @@
 # Reuse containers for faster runs
 --reuse
 
+# Don't force pull images every time (dev can manually pull when needed)
+# To update images: docker pull catthehacker/ubuntu:act-latest
+--pull=false
+
 # Use local .env for secrets (optional)
 # --env-file .env.act
 
