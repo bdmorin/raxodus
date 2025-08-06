@@ -1,3 +1,70 @@
+# Raxodus Project Context for Claude Code
+
+## Project Overview
+**Raxodus** - A minimal CLI tool for escaping Rackspace ticket hell. Built specifically for n8n automation and designed to work around the numerous Rackspace API issues.
+
+## Current Status
+- ✅ Core CLI functionality complete
+- ✅ Shell completions added (bash, zsh, fish)
+- ✅ Modern GitHub repository structure created
+- ✅ Ready for PyPI publication as v0.1.1 "Mondain"
+- 🚀 **Next Step**: Create GitHub repo and publish to PyPI
+
+## Quick Commands
+
+```bash
+# Development
+mise run build          # Build the package
+mise run test           # Test everything
+mise run test-local     # Quick version check
+
+# Publishing
+mise run release-check  # Pre-release checklist
+mise run publish-test   # Publish to TestPyPI
+mise run publish        # Publish to PyPI
+
+# Maintenance
+mise run clean          # Clean build artifacts
+mise run refresh-act-images  # Update act Docker images
+```
+
+## Key Design Decisions
+
+### Security
+- **NO CLI credential flags** - Only environment variables (by design)
+- Credentials never logged, even in debug mode
+- Built for secure n8n integration
+
+### API Workarounds
+- 30+ second response times are normal (not a bug)
+- Extensive retry logic for flaky endpoints
+- Debug mode includes timing metadata
+- See `docs/RACKSPACE_API_ISSUES.md` for known problems
+
+### Development
+- Uses `mise` for task automation
+- Tests with `uvx` to match production usage
+- Ultima III themed releases with DiceBear avatars
+
+## Remaining Tasks
+
+1. **Create GitHub Repository**
+   ```bash
+   ./scripts/setup_github.sh
+   ```
+
+2. **Add PyPI Token**
+   - Go to GitHub repo settings → Secrets
+   - Add `PYPI_API_TOKEN` from pypi.org
+
+3. **Create Release**
+   ```bash
+   git tag v0.1.1
+   git push origin main --tags
+   ```
+
+---
+
 # Raxodus Development Guidelines
 
 ## Version 1.0 Release Criteria
