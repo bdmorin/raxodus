@@ -40,9 +40,6 @@ raxodus tickets list --days 7
 # Get specific ticket
 raxodus tickets get 250625-02866
 
-# Search tickets
-raxodus tickets search "backup failed"
-
 # Output as JSON for n8n
 raxodus tickets list --format json | jq '.tickets[] | select(.status == "open")'
 ```
@@ -124,11 +121,6 @@ raxodus tickets list [OPTIONS]
 # Get single ticket
 raxodus tickets get TICKET_ID [OPTIONS]
   --format TEXT      Output format (json, table)
-
-# Search tickets
-raxodus tickets search QUERY [OPTIONS]
-  --account TEXT     Rackspace account number
-  --format TEXT      Output format (json, table, csv)
 ```
 
 ## Development

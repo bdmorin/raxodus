@@ -101,7 +101,12 @@ def tickets():
     default="json",
     help="Output format",
 )
-def list_tickets(account, status, days, page, per_page, output_format):
+@click.option(
+    "--debug/--no-debug",
+    default=False,
+    help="Include timing metadata in JSON output",
+)
+def list_tickets(account, status, days, page, per_page, output_format, debug):
     """List support tickets."""
     try:
         with RackspaceClient() as client:
@@ -114,8 +119,13 @@ def list_tickets(account, status, days, page, per_page, output_format):
             )
             
             if output_format == "json":
-                click.echo(format_json(result.to_summary()))
+                click.echo(format_json(result.to_summary(include_metadata=debug)))
             elif output_format == "table":
+                if debug and result.elapsed_seconds:
+                    console.print(
+                        f"[dim]API Response: {result.elapsed_seconds}s | "
+                        f"From Cache: {result.from_cache}[/dim]"
+                    )
                 click.echo(format_table(result))
             elif output_format == "csv":
                 click.echo(format_csv(result))
@@ -135,14 +145,19 @@ def list_tickets(account, status, days, page, per_page, output_format):
     default="json",
     help="Output format",
 )
-def get_ticket(ticket_id, account, output_format):
+@click.option(
+    "--debug/--no-debug",
+    default=False,
+    help="Include timing metadata in output",
+)
+def get_ticket(ticket_id, account, output_format, debug):
     """Get a specific ticket."""
     try:
         with RackspaceClient() as client:
             ticket = client.get_ticket(ticket_id, account=account)
             
             if output_format == "json":
-                click.echo(format_json(ticket.model_dump(mode="json")))
+                click.echo(format_json(ticket.to_dict_with_metadata(include_metadata=debug)))
             elif output_format == "table":
                 # Create detailed table
                 table = Table(title=f"Ticket {ticket.id}")
@@ -165,32 +180,6 @@ def get_ticket(ticket_id, account, output_format):
         sys.exit(1)
 
 
-@tickets.command("search")
-@click.argument("query")
-@click.option("--account", help="Rackspace account number")
-@click.option(
-    "--format",
-    "output_format",
-    type=click.Choice(["json", "table", "csv"]),
-    default="json",
-    help="Output format",
-)
-def search_tickets(query, account, output_format):
-    """Search for tickets."""
-    try:
-        with RackspaceClient() as client:
-            result = client.search_tickets(query, account=account)
-            
-            if output_format == "json":
-                click.echo(format_json(result.to_summary()))
-            elif output_format == "table":
-                click.echo(format_table(result))
-            elif output_format == "csv":
-                click.echo(format_csv(result))
-                
-    except RaxodusError as e:
-        console.print(f"[red]Error:[/red] {e}", file=sys.stderr)
-        sys.exit(1)
 
 
 def main():

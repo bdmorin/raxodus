@@ -87,6 +87,23 @@ class Ticket(BaseModel):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat(),
         }
+    
+    def to_dict_with_metadata(self, include_metadata: bool = False) -> Dict[str, Any]:
+        """Return dict with optional metadata.
+        
+        Args:
+            include_metadata: Include timing and cache metadata
+        """
+        result = self.model_dump(mode="json")
+        
+        if include_metadata and hasattr(self, '_elapsed_seconds'):
+            result["_metadata"] = {
+                "elapsed_seconds": getattr(self, '_elapsed_seconds', None),
+                "from_cache": getattr(self, '_from_cache', False),
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        
+        return result
 
 
 class TicketList(BaseModel):
@@ -96,15 +113,30 @@ class TicketList(BaseModel):
     total: int
     page: int = 1
     per_page: int = 100
+    elapsed_seconds: Optional[float] = None  # API response time
+    from_cache: bool = False  # Whether this was from cache
     
-    def to_summary(self) -> Dict[str, Any]:
-        """Return summary for JSON output."""
-        return {
+    def to_summary(self, include_metadata: bool = False) -> Dict[str, Any]:
+        """Return summary for JSON output.
+        
+        Args:
+            include_metadata: Include timing and cache metadata
+        """
+        result = {
             "total": self.total,
             "page": self.page,
             "per_page": self.per_page,
             "tickets": [t.to_summary() for t in self.tickets],
         }
+        
+        if include_metadata:
+            result["_metadata"] = {
+                "elapsed_seconds": self.elapsed_seconds,
+                "from_cache": self.from_cache,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+        
+        return result
 
 
 class AuthToken(BaseModel):

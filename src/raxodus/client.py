@@ -215,6 +215,8 @@ class RackspaceClient:
         Returns:
             List of tickets
         """
+        import time
+        
         account = account or self.account
         if not account:
             raise RaxodusError("Account number required")
@@ -236,15 +238,20 @@ class RackspaceClient:
         cache_key = f"tickets_{account}_{status}_{days}_{page}_{per_page}"
         cached = self._get_cached(cache_key)
         if cached:
-            return TicketList(**cached)
+            result = TicketList(**cached)
+            result.from_cache = True
+            result.elapsed_seconds = 0.0
+            return result
         
-        # Make request
+        # Make request with timing
+        start_time = time.time()
         response = self._request(
             "GET",
             f"{self.ticket_api_url}/tickets",
             headers=self._get_headers(),
             params=params,
         )
+        elapsed = time.time() - start_time
         
         data = response.json()
         
@@ -255,6 +262,8 @@ class RackspaceClient:
             total=data.get("total", len(tickets)),
             page=page,
             per_page=per_page,
+            elapsed_seconds=round(elapsed, 3),
+            from_cache=False,
         )
         
         # Cache result
@@ -276,6 +285,8 @@ class RackspaceClient:
         Returns:
             Ticket details
         """
+        import time
+        
         account = account or self.account
         if not account:
             raise RaxodusError("Account number required")
@@ -284,57 +295,33 @@ class RackspaceClient:
         cache_key = f"ticket_{account}_{ticket_id}"
         cached = self._get_cached(cache_key)
         if cached:
-            return Ticket(**cached)
+            ticket = Ticket(**cached)
+            # Add timing metadata
+            ticket._elapsed_seconds = 0.0
+            ticket._from_cache = True
+            return ticket
         
-        # Make request
+        # Make request with timing
+        start_time = time.time()
         response = self._request(
             "GET",
             f"{self.ticket_api_url}/tickets/{ticket_id}",
             headers=self._get_headers(),
         )
+        elapsed = time.time() - start_time
         
         data = response.json()
         ticket = Ticket(**data)
+        
+        # Add timing metadata (using private attrs)
+        ticket._elapsed_seconds = round(elapsed, 3)
+        ticket._from_cache = False
         
         # Cache result
         self._set_cached(cache_key, ticket.model_dump(mode="json"))
         
         return ticket
     
-    def search_tickets(
-        self,
-        query: str,
-        account: Optional[str] = None,
-    ) -> TicketList:
-        """Search tickets.
-        
-        Args:
-            query: Search query
-            account: Account number (uses default if not provided)
-            
-        Returns:
-            Search results
-        """
-        account = account or self.account
-        if not account:
-            raise RaxodusError("Account number required")
-        
-        # Search is done via the main tickets endpoint with 'search' parameter
-        response = self._request(
-            "GET",
-            f"{self.ticket_api_url}/tickets",
-            headers=self._get_headers(),
-            params={"search": query},
-        )
-        
-        data = response.json()
-        
-        # Parse tickets
-        tickets = [Ticket(**t) for t in data.get("tickets", [])]
-        return TicketList(
-            tickets=tickets,
-            total=data.get("total", len(tickets)),
-        )
     
     def _get_cached(self, key: str) -> Optional[Dict[str, Any]]:
         """Get cached data if available and not expired.
