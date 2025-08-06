@@ -1,4 +1,9 @@
-# raxodus
+# 🗡️ Raxodus
+
+[![PyPI version](https://badge.fury.io/py/raxodus.svg)](https://badge.fury.io/py/raxodus)
+[![Python versions](https://img.shields.io/pypi/pyversions/raxodus.svg)](https://pypi.org/project/raxodus/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 > *"Neither demon nor machine, but something altogether different"* - Ultima III
 
