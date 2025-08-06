@@ -30,20 +30,43 @@ class TicketComment(BaseModel):
 class Ticket(BaseModel):
     """Rackspace support ticket."""
     
-    id: str
+    # Core fields that always exist in list responses
+    ticketId: str
     subject: str
     status: str
-    severity: Optional[str] = None
+    modified: datetime
+    
+    # Optional fields
+    severity: Optional[str] = ""
+    accountId: Optional[str] = None
     category: Optional[str] = None
     subcategory: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
-    account_id: Optional[str] = None
-    requester: Optional[str] = None
-    assigned_to: Optional[str] = None
+    created: Optional[datetime] = None  # Not in list response
+    createdAt: Optional[datetime] = None  # Sometimes this field
+    favorite: Optional[bool] = False
+    resources: List[str] = Field(default_factory=list)
+    createdBy: Optional[Dict[str, Any]] = None
+    modifiedBy: Optional[Dict[str, Any]] = None
     description: Optional[str] = None
     resolution: Optional[str] = None
     comments: List[TicketComment] = Field(default_factory=list)
+    recipients: Optional[Any] = None  # Can be null
+    
+    # Convenience properties
+    @property
+    def id(self) -> str:
+        """Alias for ticketId."""
+        return self.ticketId
+    
+    @property
+    def created_at(self) -> Optional[datetime]:
+        """Get created timestamp."""
+        return self.created or self.createdAt
+    
+    @property
+    def updated_at(self) -> datetime:
+        """Alias for modified."""
+        return self.modified
     
     class Config:
         extra = "ignore"  # Future-proof against API changes
@@ -61,7 +84,7 @@ class Ticket(BaseModel):
             "subject": self.subject,
             "status": self.status,
             "severity": self.severity,
-            "created_at": self.created_at.isoformat(),
+            "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat(),
         }
 

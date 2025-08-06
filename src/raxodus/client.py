@@ -21,17 +21,21 @@ from .models import AuthToken, Ticket, TicketList
 class RackspaceClient:
     """Client for interacting with Rackspace API."""
     
-    AUTH_URL = "https://identity.api.rackspacecloud.com"
-    TICKET_API_URL = "https://demo.ticketing.api.rackspace.com"
+    # Default URLs - can be overridden via environment or init
+    DEFAULT_AUTH_URL = "https://identity.api.rackspacecloud.com"
+    DEFAULT_TICKET_API_URL = "https://demo.ticketing.api.rackspace.com"
     
     def __init__(
         self,
         username: Optional[str] = None,
         api_key: Optional[str] = None,
         account: Optional[str] = None,
+        auth_url: Optional[str] = None,
+        ticket_api_url: Optional[str] = None,
         region: str = "us",
         cache_dir: Optional[Path] = None,
         cache_ttl: int = 300,
+        timeout: float = 30.0,
     ):
         """Initialize Rackspace client.
         
@@ -39,14 +43,20 @@ class RackspaceClient:
             username: Rackspace username (or from RACKSPACE_USERNAME env)
             api_key: API key (or from RACKSPACE_API_KEY env)
             account: Default account number (or from RACKSPACE_ACCOUNT env)
+            auth_url: Authentication URL (or from RACKSPACE_AUTH_URL env)
+            ticket_api_url: Ticket API URL (or from RACKSPACE_TICKET_API_URL env)
             region: API region (default: us)
             cache_dir: Directory for caching responses
             cache_ttl: Cache time-to-live in seconds
+            timeout: HTTP timeout in seconds
         """
         self.username = username or os.getenv("RACKSPACE_USERNAME")
         self.api_key = api_key or os.getenv("RACKSPACE_API_KEY")
         self.account = account or os.getenv("RACKSPACE_ACCOUNT")
+        self.auth_url = auth_url or os.getenv("RACKSPACE_AUTH_URL", self.DEFAULT_AUTH_URL)
+        self.ticket_api_url = ticket_api_url or os.getenv("RACKSPACE_TICKET_API_URL", self.DEFAULT_TICKET_API_URL)
         self.region = region
+        self.timeout = timeout
         
         if not self.username or not self.api_key:
             raise RaxodusError(
@@ -61,7 +71,7 @@ class RackspaceClient:
         
         # HTTP client
         self.client = httpx.Client(
-            timeout=30.0,
+            timeout=self.timeout,
             headers={"User-Agent": "raxodus/0.1.0"},
         )
         
@@ -149,7 +159,7 @@ class RackspaceClient:
         
         response = self._request(
             "POST",
-            f"{self.AUTH_URL}/v2.0/tokens",
+            f"{self.auth_url}/v2.0/tokens",
             json=auth_data,
         )
         
@@ -231,7 +241,7 @@ class RackspaceClient:
         # Make request
         response = self._request(
             "GET",
-            f"{self.TICKET_API_URL}/tickets",
+            f"{self.ticket_api_url}/tickets",
             headers=self._get_headers(),
             params=params,
         )
@@ -279,7 +289,7 @@ class RackspaceClient:
         # Make request
         response = self._request(
             "GET",
-            f"{self.TICKET_API_URL}/tickets/{ticket_id}",
+            f"{self.ticket_api_url}/tickets/{ticket_id}",
             headers=self._get_headers(),
         )
         
@@ -309,12 +319,12 @@ class RackspaceClient:
         if not account:
             raise RaxodusError("Account number required")
         
-        # Make request
+        # Search is done via the main tickets endpoint with 'search' parameter
         response = self._request(
             "GET",
-            f"{self.TICKET_API_URL}/tickets/search",
+            f"{self.ticket_api_url}/tickets",
             headers=self._get_headers(),
-            params={"q": query},
+            params={"search": query},
         )
         
         data = response.json()
