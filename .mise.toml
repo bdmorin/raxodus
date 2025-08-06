@@ -134,6 +134,16 @@ DOCKER_HOST=unix:///$HOME/.colima/default/docker.sock act \
     --matrix python-version:3.11
 """
 
+[tasks.refresh-act-images]
+description = "Pull latest act Docker images"
+run = """
+echo "🐳 Pulling latest act Docker images..."
+docker pull catthehacker/ubuntu:act-latest
+docker pull catthehacker/ubuntu:act-22.04
+docker pull catthehacker/ubuntu:act-20.04
+echo "✅ Act images updated"
+"""
+
 [tasks.watch]
 description = "Watch for changes and rebuild"
 run = """
